@@ -71,7 +71,8 @@ export default function FishCursor({ cursorPos, onClick }: Props) {
     speedRef.current = lerp(speedRef.current, Math.min(spd * 0.03, 1), 0.1)
     _prv.copy(p)
 
-    _dir.set(dx, dy, dz)
+    // Only use X and Z for rotation direction so the fish never pitches up or down
+    _dir.set(dx, 0, dz)
     if (_dir.lengthSq() > 0.0001) {
       _dir.normalize()
       _lmt.lookAt(p, p.clone().add(_dir), _up)

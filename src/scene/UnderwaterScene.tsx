@@ -40,7 +40,7 @@ export default function UnderwaterScene() {
 
   return (
     <>
-      <fogExp2 attach="fog" args={['#010f1a', 0.016]} />
+      <fogExp2 attach="fog" args={['#010f1a', 0.008]} />
       <color   attach="background" args={['#010f1a']} />
 
       <Lighting />

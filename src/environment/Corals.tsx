@@ -19,9 +19,8 @@ function computePlacement(scene: THREE.Group, target: number) {
   const box = new THREE.Box3().setFromObject(scene)
   const sz  = new THREE.Vector3(); box.getSize(sz)
   const m   = Math.max(sz.x, sz.y, sz.z)
-  const s   = m > 0 ? target / m : 1.0
-  const yOff = SEABED - box.min.y * s
-  return { s, yOff }
+  const baseScale = m > 0 ? target / m : 1.0
+  return { baseScale, minY: box.min.y }
 }
 
 export default function Corals() {
@@ -42,10 +41,10 @@ export default function Corals() {
 
   return (
     <>
-      {corals.map((c, i)    => { const sc = cP.s  * c.s;  return <primitive key={`c1-${i}`} object={c.clone} position={[c.x, cP.yOff  / c.s,  c.z]} rotation={[0,c.ry,0]} scale={[sc,sc,sc]} /> })}
-      {corals2.map((c, i)   => { const sc = c2P.s * c.s;  return <primitive key={`c2-${i}`} object={c.clone} position={[c.x, c2P.yOff / c.s,  c.z]} rotation={[0,c.ry,0]} scale={[sc,sc,sc]} /> })}
-      {anemones.map((a, i)  => { const sc = aP.s  * a.s;  return <primitive key={`an-${i}`} object={a.clone} position={[a.x, aP.yOff  / a.s,  a.z]} rotation={[0,a.ry,0]} scale={[sc,sc,sc]} /> })}
-      {envCorals.map((e, i) => { const sc = eP.s  * e.s;  return <primitive key={`ec-${i}`} object={e.clone} position={[e.x, eP.yOff  / e.s,  e.z]} rotation={[0,e.ry,0]} scale={[sc,sc,sc]} /> })}
+      {corals.map((c, i)    => { const sc = cP.baseScale  * c.s;  const y = SEABED - cP.minY  * sc; return <primitive key={`c1-${i}`} object={c.clone} position={[c.x, y, c.z]} rotation={[0,c.ry,0]} scale={[sc,sc,sc]} /> })}
+      {corals2.map((c, i)   => { const sc = c2P.baseScale * c.s;  const y = SEABED - c2P.minY * sc; return <primitive key={`c2-${i}`} object={c.clone} position={[c.x, y, c.z]} rotation={[0,c.ry,0]} scale={[sc,sc,sc]} /> })}
+      {anemones.map((a, i)  => { const sc = aP.baseScale  * a.s;  const y = SEABED - aP.minY  * sc; return <primitive key={`an-${i}`} object={a.clone} position={[a.x, y, a.z]} rotation={[0,a.ry,0]} scale={[sc,sc,sc]} /> })}
+      {envCorals.map((e, i) => { const sc = eP.baseScale  * e.s;  const y = SEABED - eP.minY  * sc; return <primitive key={`ec-${i}`} object={e.clone} position={[e.x, y, e.z]} rotation={[0,e.ry,0]} scale={[sc,sc,sc]} /> })}
     </>
   )
 }

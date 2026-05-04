@@ -49,15 +49,31 @@ export default function MarineSnow() {
     pos.needsUpdate = true
   })
 
+  const circleTex = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 32
+    canvas.height = 32
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.beginPath()
+      ctx.arc(16, 16, 14, 0, 2 * Math.PI)
+      ctx.fillStyle = '#ffffff'
+      ctx.fill()
+    }
+    return new THREE.CanvasTexture(canvas)
+  }, [])
+
   return (
     <points ref={meshRef} geometry={geo} frustumCulled={false}>
       <pointsMaterial
+        map={circleTex}
         size={0.08}
         color="#aaddff"
         transparent
         opacity={0.4}
         depthWrite={false}
         sizeAttenuation
+        alphaTest={0.01}
       />
     </points>
   )

@@ -18,11 +18,8 @@ function computePlacement(scene: THREE.Group, target: number, seabedY: number) {
   const box = new THREE.Box3().setFromObject(scene)
   const sz  = new THREE.Vector3(); box.getSize(sz)
   const m   = Math.max(sz.x, sz.y, sz.z)
-  const s   = m > 0 ? target / m : 1.0
-  // After scaling, the model's lowest point = box.min.y * s
-  // We want that point to be at seabedY
-  const yOff = seabedY - box.min.y * s
-  return { s, yOff }
+  const baseScale = m > 0 ? target / m : 1.0
+  return { baseScale, minY: box.min.y, seabedY }
 }
 
 export default function Seagrass() {
@@ -38,20 +35,22 @@ export default function Seagrass() {
   return (
     <>
       {kelps.map((k, i) => {
-        const sc = kPlacement.s * k.s
+        const sc = kPlacement.baseScale * k.s
+        const y = kPlacement.seabedY - kPlacement.minY * sc
         return (
           <primitive key={`k-${i}`} object={k.clone}
-            position={[k.x, kPlacement.yOff / k.s, k.z]}
+            position={[k.x, y, k.z]}
             rotation={[0, k.ry, 0]}
             scale={[sc, sc, sc]}
           />
         )
       })}
       {plants.map((p, i) => {
-        const sc = pPlacement.s * p.s
+        const sc = pPlacement.baseScale * p.s
+        const y = pPlacement.seabedY - pPlacement.minY * sc
         return (
           <primitive key={`p-${i}`} object={p.clone}
-            position={[p.x, pPlacement.yOff / p.s, p.z]}
+            position={[p.x, y, p.z]}
             rotation={[0, p.ry, 0]}
             scale={[sc, sc, sc]}
           />
