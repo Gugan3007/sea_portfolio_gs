@@ -1,6 +1,3 @@
-import { EffectComposer, ChromaticAberration, Vignette } from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
-import * as THREE from 'three'
 
 /**
  * PostProcessing: COMPLETELY DISABLED.

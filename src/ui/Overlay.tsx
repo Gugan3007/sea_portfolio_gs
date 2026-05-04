@@ -70,12 +70,12 @@ const slideVariants = {
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 1.0, ease: [0.22, 1, 0.36, 1] }
+    transition: { duration: 1.0, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
   },
   exit: (direction: number) => ({
     opacity: 0,
     y: direction > 0 ? -120 : 120, // Slide up out of view if scrolling down
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
   })
 }
 
