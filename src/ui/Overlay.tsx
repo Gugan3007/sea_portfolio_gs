@@ -1,5 +1,5 @@
 import { motion, AnimatePresence, MotionValue, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const SECTIONS = ['Home', 'About', 'Experience', 'Projects', 'Contact'] as const
 type Section = typeof SECTIONS[number]
@@ -83,6 +83,8 @@ export default function Overlay() {
   const [active, setActive] = useState<Section>('Home')
   const [dir, setDir] = useState<number>(1)
   const [vis, setVis] = useState(false)
+  const touchStartY = useRef<number | null>(null)
+  const touchStartedInScrollable = useRef(false)
   const { px, py } = useMouseParallax(16) // Added parallax to all panels
 
   useEffect(() => {
@@ -141,6 +143,46 @@ export default function Overlay() {
     setDir(nextIndex > currentIndex ? 1 : -1);
     setActive(s);
   }
+
+  useEffect(() => {
+    const go = (direction: number) => {
+      setDir(direction)
+      setActive(prevActive => {
+        const currentIndex = SECTIONS.indexOf(prevActive)
+        const nextIndex = currentIndex + direction
+        return nextIndex >= 0 && nextIndex < SECTIONS.length ? SECTIONS[nextIndex] : prevActive
+      })
+    }
+
+    const onTouchStart = (event: TouchEvent) => {
+      touchStartY.current = event.touches[0]?.clientY ?? null
+      const target = event.target instanceof Element ? event.target : null
+      const scrollable = target?.closest('.proj-grid, .glass-panel')
+      touchStartedInScrollable.current = Boolean(scrollable && scrollable.scrollHeight > scrollable.clientHeight)
+    }
+
+    const onTouchEnd = (event: TouchEvent) => {
+      if (touchStartY.current === null) return
+      if (touchStartedInScrollable.current) {
+        touchStartY.current = null
+        touchStartedInScrollable.current = false
+        return
+      }
+      const endY = event.changedTouches[0]?.clientY ?? touchStartY.current
+      const deltaY = touchStartY.current - endY
+      touchStartY.current = null
+      touchStartedInScrollable.current = false
+      if (Math.abs(deltaY) < 58) return
+      go(deltaY > 0 ? 1 : -1)
+    }
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [])
 
   return (
     <>

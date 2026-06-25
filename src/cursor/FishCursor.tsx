@@ -13,6 +13,9 @@ const _lmt = new THREE.Matrix4()
 const _up  = new THREE.Vector3(0, 1, 0)
 const _box = new THREE.Box3()
 const _siz = new THREE.Vector3()
+const _camDir = new THREE.Vector3()
+const _planePoint = new THREE.Vector3()
+const _hit = new THREE.Vector3()
 
 interface Props {
   cursorPos: React.MutableRefObject<THREE.Vector3>
@@ -28,7 +31,24 @@ export default function FishCursor({ cursorPos, onClick }: Props) {
   const plane = useRef(new THREE.Plane())
 
   const { scene, animations } = useGLTF('/models/goldfish.glb')
-  const clonedScene = useMemo(() => scene.clone(true), [scene])
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone(true)
+    clone.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh) {
+        const mesh = o as THREE.Mesh
+        mesh.renderOrder = 999
+        if (mesh.material) {
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+          materials.forEach((material) => {
+            material.depthTest = false
+            material.depthWrite = false
+            material.needsUpdate = true
+          })
+        }
+      }
+    })
+    return clone
+  }, [scene])
   const { actions, names } = useAnimations(animations, group)
 
   // ── Auto-scale: normalize to 1.3 world units (clearly visible, not huge) ──
@@ -50,15 +70,14 @@ export default function FishCursor({ cursorPos, onClick }: Props) {
     if (!group.current) return
 
     raycaster.setFromCamera(pointer, camera)
-    const camDir = new THREE.Vector3()
-    camera.getWorldDirection(camDir)
+    camera.getWorldDirection(_camDir)
+    _planePoint.copy(camera.position).addScaledVector(_camDir, 6)
     plane.current.setFromNormalAndCoplanarPoint(
-      camDir,
-      camera.position.clone().add(camDir.multiplyScalar(10))
+      _camDir,
+      _planePoint
     )
-    const hit = new THREE.Vector3()
-    if (!raycaster.ray.intersectPlane(plane.current, hit)) return
-    _tgt.copy(hit)
+    if (!raycaster.ray.intersectPlane(plane.current, _hit)) return
+    _tgt.copy(_hit)
 
     const p = group.current.position
     p.x = lerp(p.x, _tgt.x, 0.09)
@@ -75,7 +94,8 @@ export default function FishCursor({ cursorPos, onClick }: Props) {
     _dir.set(dx, 0, dz)
     if (_dir.lengthSq() > 0.0001) {
       _dir.normalize()
-      _lmt.lookAt(p, p.clone().add(_dir), _up)
+      _tgt.copy(p).add(_dir)
+      _lmt.lookAt(p, _tgt, _up)
       _tqt.setFromRotationMatrix(_lmt)
       group.current.quaternion.slerp(_tqt, 0.08)
     }
@@ -90,9 +110,9 @@ export default function FishCursor({ cursorPos, onClick }: Props) {
   }, [onClick])
 
   return (
-    <group ref={group} scale={[normalizedScale, normalizedScale, normalizedScale]} onClick={handleClick}>
+    <group ref={group} scale={[normalizedScale, normalizedScale, normalizedScale]} renderOrder={999} onClick={handleClick}>
       {/* Orange-gold glow — clearly distinguishes cursor from other fish */}
-      <pointLight color="#ff9933" intensity={6} distance={14} decay={2} />
+      <pointLight color="#ffb13d" intensity={8} distance={12} decay={2} />
       <primitive object={clonedScene} />
     </group>
   )
