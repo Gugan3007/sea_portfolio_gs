@@ -85,11 +85,22 @@ export default function Overlay() {
   const [vis, setVis] = useState(false)
   const touchStartY = useRef<number | null>(null)
   const touchStartedInScrollable = useRef(false)
-  const { px, py } = useMouseParallax(16) // Added parallax to all panels
+  const [mobileViewport, setMobileViewport] = useState(() =>
+    window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
+  )
+  const { px, py } = useMouseParallax(mobileViewport ? 0 : 16)
 
   useEffect(() => {
     const t = setTimeout(() => setVis(true), 1000)
     return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 768px), (pointer: coarse)')
+    const syncViewport = () => setMobileViewport(media.matches)
+    syncViewport()
+    media.addEventListener('change', syncViewport)
+    return () => media.removeEventListener('change', syncViewport)
   }, [])
 
   // Sync active section to window for 3D Camera parallax
@@ -186,7 +197,7 @@ export default function Overlay() {
 
   return (
     <>
-      <div className="ui-layer" style={{ pointerEvents: 'none' }}>
+      <div className="overlay-content" style={{ pointerEvents: 'none' }}>
         <AnimatePresence mode="wait" custom={dir}>
 
           {/* HOME */}
